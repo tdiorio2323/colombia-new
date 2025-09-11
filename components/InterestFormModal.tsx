@@ -12,48 +12,24 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [personalizedMessage, setPersonalizedMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Reset form on close
     if (!isOpen) {
       setTimeout(() => {
         setIsSubmitted(false);
         setName('');
         setEmail('');
         setMessage('');
-        setPersonalizedMessage('');
-        setIsLoading(false);
-      }, 300);
+      }, 300); // Allow for closing animation
     }
   }, [isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    try {
-      const response = await fetch('http://localhost:3001/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate message');
-      }
-
-      const data = await response.json();
-      setPersonalizedMessage(data.personalizedMessage);
-      setIsSubmitted(true);
-    } catch (error) {
-      console.error("Failed to generate message:", error);
-      setPersonalizedMessage("Thank you for your interest! We will be in touch shortly to discuss the details of your exclusive experience.");
-      setIsSubmitted(true);
-    } finally {
-      setIsLoading(false);
-    }
+    // In a real app, you'd send this data to a server
+    console.log({ name, email, message });
+    setIsSubmitted(true);
   };
 
   if (!isOpen) {
@@ -85,7 +61,7 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
                 <CrownIcon className="w-8 h-8 text-brand-dark" />
             </div>
             <h3 className="text-3xl font-serif font-bold bg-clip-text text-transparent bg-brand-gradient mb-3">Thank You!</h3>
-            <p className="text-stone-300">{personalizedMessage}</p>
+            <p className="text-stone-300">Your inquiry has been received. We will be in touch shortly to discuss the details of your exclusive experience.</p>
           </div>
         ) : (
           <>
@@ -132,10 +108,9 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
               </div>
               <button 
                 type="submit"
-                disabled={isLoading}
-                className="w-full mt-auto px-8 py-3 bg-brand-gradient text-brand-dark font-bold rounded-full shadow-lg shadow-pink-500/10 hover:shadow-glow hover:bg-brand-gradient-hover transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-auto px-8 py-3 bg-brand-gradient text-brand-dark font-bold rounded-full shadow-lg shadow-pink-500/10 hover:shadow-glow hover:bg-brand-gradient-hover transition-all duration-300 transform hover:scale-105"
               >
-                {isLoading ? 'Submitting...' : 'Submit Inquiry'}
+                Submit Inquiry
               </button>
             </form>
           </>
