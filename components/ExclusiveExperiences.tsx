@@ -16,8 +16,8 @@ const ExperienceCard: React.FC<{ experience: Experience }> = ({ experience }) =>
       <p className="text-stone-400 mb-4 flex-grow">{experience.description}</p>
       <p className="font-semibold text-brand-gold mb-6">{experience.duration}</p>
       <ul className="text-left space-y-2 mb-8">
-        {experience.features.map((feature, index) => (
-          <li key={index} className="flex items-center gap-3">
+        {experience.features.map((feature) => (
+          <li key={`${experience.id}-${feature}`} className="flex items-center gap-3">
             <CheckIcon className="w-5 h-5 text-brand-rose" />
             <span className="text-stone-300">{feature}</span>
           </li>
