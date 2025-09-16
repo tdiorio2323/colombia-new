@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { CrownIcon } from './Icons';
 
 interface HeroProps {
   onExclusiveAccessClick: () => void;
