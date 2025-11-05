@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CrownIcon, CloseIcon } from './Icons';
-import { supabase } from '../lib/supabase';
 
 interface InterestFormModalProps {
   isOpen: boolean;
@@ -12,15 +12,14 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Reset form on close
     if (!isOpen) {
       setTimeout(() => {
-        setIsSubmitted(false);
         setName('');
         setEmail('');
         setMessage('');
@@ -35,8 +34,8 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
     setError(null);
 
     try {
-      // Submit to Formspree
-      const formspreeResponse = await fetch('https://formspree.io/f/mwprljle', {
+      // Submit to our Vercel API
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -44,28 +43,18 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
         body: JSON.stringify({ name, email, message })
       });
 
-      if (!formspreeResponse.ok) {
-        throw new Error('Failed to submit to Formspree');
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Failed to submit inquiry');
       }
 
-      // Also save to Supabase
-      const { error: supabaseError } = await supabase
-        .from('contact_inquiries')
-        .insert([
-          {
-            name,
-            email,
-            message,
-            created_at: new Date().toISOString()
-          }
-        ]);
+      // Close modal and navigate to thank you page
+      onClose();
+      setTimeout(() => {
+        navigate('/thank-you');
+      }, 300);
 
-      if (supabaseError) {
-        console.warn('Supabase save failed:', supabaseError);
-        // Don't throw - Formspree succeeded which is primary
-      }
-
-      setIsSubmitted(true);
     } catch (err) {
       console.error('Error submitting form:', err);
       setError(err instanceof Error ? err.message : 'Failed to submit inquiry. Please try again.');
@@ -97,16 +86,7 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
           <CloseIcon className="w-6 h-6" />
         </button>
 
-        {isSubmitted ? (
-          <div className="text-center">
-            <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-brand-gradient flex items-center justify-center">
-                <CrownIcon className="w-8 h-8 text-brand-dark" />
-            </div>
-            <h3 className="text-3xl font-serif font-bold bg-clip-text text-transparent bg-brand-gradient mb-3">Thank You!</h3>
-            <p className="text-stone-300">Your inquiry has been received. We will be in touch shortly to discuss the details of your exclusive experience.</p>
-          </div>
-        ) : (
-          <>
+        <>
             <div className="text-center mb-8">
               <h3 className="text-4xl font-serif font-bold bg-clip-text text-transparent bg-brand-gradient mb-3">Exclusive Inquiry</h3>
               <p className="text-stone-400">Complete the form below to express your interest in our exclusive experiences.</p>
@@ -161,8 +141,7 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
                 {isLoading ? 'Submitting...' : 'Submit Inquiry'}
               </button>
             </form>
-          </>
-        )}
+        </>
       </div>
     </div>
   );
