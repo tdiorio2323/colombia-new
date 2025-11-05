@@ -9,10 +9,7 @@ interface ContactRequest {
   message: string;
 }
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
@@ -25,7 +22,7 @@ export default async function handler(
     if (!name || !email || !message) {
       return res.status(400).json({
         ok: false,
-        error: 'Missing required fields: name, email, and message are required'
+        error: 'Missing required fields: name, email, and message are required',
       });
     }
 
@@ -34,7 +31,7 @@ export default async function handler(
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         ok: false,
-        error: 'Invalid email address'
+        error: 'Invalid email address',
       });
     }
 
@@ -43,7 +40,7 @@ export default async function handler(
       console.error('RESEND_API_KEY is not set');
       return res.status(500).json({
         ok: false,
-        error: 'Server configuration error'
+        error: 'Server configuration error',
       });
     }
 
@@ -51,7 +48,7 @@ export default async function handler(
       console.error('CONTACT_TO is not set');
       return res.status(500).json({
         ok: false,
-        error: 'Server configuration error'
+        error: 'Server configuration error',
       });
     }
 
@@ -150,7 +147,7 @@ export default async function handler(
               <p>This inquiry was submitted through Colombian Luxury website</p>
               <p>Received: ${new Date().toLocaleString('en-US', {
                 dateStyle: 'long',
-                timeStyle: 'short'
+                timeStyle: 'short',
               })}</p>
             </div>
           </body>
@@ -174,20 +171,19 @@ Received: ${new Date().toLocaleString()}
       console.error('Resend API error:', error);
       return res.status(500).json({
         ok: false,
-        error: 'Failed to send email. Please try again later.'
+        error: 'Failed to send email. Please try again later.',
       });
     }
 
     return res.status(200).json({
       ok: true,
-      messageId: data?.id
+      messageId: data?.id,
     });
-
   } catch (error) {
     console.error('Contact API error:', error);
     return res.status(500).json({
       ok: false,
-      error: 'An unexpected error occurred. Please try again later.'
+      error: 'An unexpected error occurred. Please try again later.',
     });
   }
 }

@@ -30,18 +30,21 @@ View your app in AI Studio: https://ai.studio/apps/drive/16-SyMSLBU5IDrcmcRkvIt_
 **Prerequisites:** Node.js 18+
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Set up environment variables:
    Create a `.env.local` file in the root directory with:
+
    ```
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
 3. Run the development server:
+
    ```bash
    npm run dev
    ```
@@ -71,5 +74,6 @@ The app uses Supabase to store contact form submissions. To set up the database:
 ## Form Integration
 
 Contact form submissions are sent to:
+
 - **Primary**: Formspree (https://formspree.io/f/mwprljle)
 - **Secondary**: Supabase database for backup/analytics

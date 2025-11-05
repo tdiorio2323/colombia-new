@@ -13,10 +13,12 @@ const ThankYou: React.FC = () => {
           Thank You!
         </h1>
         <p className="text-xl text-stone-300 mb-8 leading-relaxed">
-          Your exclusive inquiry has been received. We will be in touch shortly to discuss the details of your luxury experience.
+          Your exclusive inquiry has been received. We will be in touch shortly to discuss the
+          details of your luxury experience.
         </p>
         <p className="text-stone-400 mb-12">
-          Our team typically responds within 24 hours. Please check your email for our correspondence.
+          Our team typically responds within 24 hours. Please check your email for our
+          correspondence.
         </p>
         <Link
           to="/"

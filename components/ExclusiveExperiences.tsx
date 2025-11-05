@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Experience } from '../types';
 import { experiences } from './data';
@@ -31,12 +30,14 @@ const ExperienceCard: React.FC<{ experience: Experience }> = ({ experience }) =>
   );
 };
 
-
 const ExclusiveExperiences: React.FC = () => {
   return (
     <section className="py-20 px-4">
       <div className="container mx-auto">
-        <SectionTitle title="Exclusive Experiences" subtitle="Indulge in luxury experiences crafted for those who demand perfection" />
+        <SectionTitle
+          title="Exclusive Experiences"
+          subtitle="Indulge in luxury experiences crafted for those who demand perfection"
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {experiences.map((exp) => (
             <ExperienceCard key={exp.id} experience={exp} />
