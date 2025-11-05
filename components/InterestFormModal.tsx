@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CrownIcon, CloseIcon } from './Icons';
+import { supabase } from '../lib/supabase';
 
 interface InterestFormModalProps {
   isOpen: boolean;
@@ -12,6 +13,8 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Reset form on close
@@ -21,15 +24,54 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
         setName('');
         setEmail('');
         setMessage('');
+        setError(null);
       }, 300); // Allow for closing animation
     }
   }, [isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd send this data to a server
-    console.log({ name, email, message });
-    setIsSubmitted(true);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Submit to Formspree
+      const formspreeResponse = await fetch('https://formspree.io/f/mwprljle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, message })
+      });
+
+      if (!formspreeResponse.ok) {
+        throw new Error('Failed to submit to Formspree');
+      }
+
+      // Also save to Supabase
+      const { error: supabaseError } = await supabase
+        .from('contact_inquiries')
+        .insert([
+          {
+            name,
+            email,
+            message,
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (supabaseError) {
+        console.warn('Supabase save failed:', supabaseError);
+        // Don't throw - Formspree succeeded which is primary
+      }
+
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setError(err instanceof Error ? err.message : 'Failed to submit inquiry. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) {
@@ -106,11 +148,17 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
                   placeholder="Tell us about your desired experience..."
                 ></textarea>
               </div>
-              <button 
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+              <button
                 type="submit"
-                className="w-full mt-auto px-8 py-3 bg-brand-gradient text-brand-dark font-bold rounded-full shadow-lg shadow-pink-500/10 hover:shadow-glow hover:bg-brand-gradient-hover transition-all duration-300 transform hover:scale-105"
+                disabled={isLoading}
+                className="w-full mt-auto px-8 py-3 bg-brand-gradient text-brand-dark font-bold rounded-full shadow-lg shadow-pink-500/10 hover:shadow-glow hover:bg-brand-gradient-hover transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Submit Inquiry
+                {isLoading ? 'Submitting...' : 'Submit Inquiry'}
               </button>
             </form>
           </>
