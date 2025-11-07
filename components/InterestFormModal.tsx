@@ -1,10 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { CrownIcon, CloseIcon } from './Icons';
+import { contactFormSchema } from '../lib/validation';
+import { z } from 'zod';
 
 interface InterestFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  message?: string;
 }
 
 const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }) => {
@@ -12,6 +20,8 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     // Reset form on close
@@ -21,15 +31,41 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
         setName('');
         setEmail('');
         setMessage('');
+        setErrors({});
+        setIsSubmitting(false);
       }, 300); // Allow for closing animation
     }
   }, [isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd send this data to a server
-    console.log({ name, email, message });
-    setIsSubmitted(true);
+    setErrors({});
+    setIsSubmitting(true);
+
+    try {
+      // Validate form data
+      const validatedData = contactFormSchema.parse({ name, email, message });
+
+      // In a real app, you'd send this data to a server
+      console.log('Validated data:', validatedData);
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      setIsSubmitted(true);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formErrors: FormErrors = {};
+        error.issues.forEach((err) => {
+          if (err.path[0]) {
+            formErrors[err.path[0] as keyof FormErrors] = err.message;
+          }
+        });
+        setErrors(formErrors);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) {
@@ -37,18 +73,18 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
   }
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300 animate-[fade-in_0.3s_ease-out]"
       onClick={onClose}
       aria-modal="true"
       role="dialog"
     >
-      <div 
+      <div
         className="relative bg-brand-dark-2 border border-stone-700/50 rounded-2xl p-8 md:p-12 w-full max-w-lg m-4 text-white shadow-glow"
         onClick={e => e.stopPropagation()}
       >
-        <button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           className="absolute top-4 right-4 text-stone-500 hover:text-white transition-colors"
           aria-label="Close form"
         >
@@ -77,10 +113,17 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full bg-brand-dark border border-stone-600 rounded-lg px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-rose transition-all"
+                  disabled={isSubmitting}
+                  className={`w-full bg-brand-dark border rounded-lg px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:ring-2 transition-all ${
+                    errors.name ? 'border-red-500 focus:ring-red-500' : 'border-stone-600 focus:ring-brand-rose'
+                  }`}
                   placeholder="e.g. Sofia Vergara"
+                  aria-invalid={errors.name ? 'true' : 'false'}
+                  aria-describedby={errors.name ? 'name-error' : undefined}
                 />
+                {errors.name && (
+                  <p id="name-error" className="mt-1 text-sm text-red-400">{errors.name}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-stone-300 mb-2">Email Address</label>
@@ -89,10 +132,17 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full bg-brand-dark border border-stone-600 rounded-lg px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-rose transition-all"
+                  disabled={isSubmitting}
+                  className={`w-full bg-brand-dark border rounded-lg px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:ring-2 transition-all ${
+                    errors.email ? 'border-red-500 focus:ring-red-500' : 'border-stone-600 focus:ring-brand-rose'
+                  }`}
                   placeholder="you@example.com"
+                  aria-invalid={errors.email ? 'true' : 'false'}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
                 />
+                {errors.email && (
+                  <p id="email-error" className="mt-1 text-sm text-red-400">{errors.email}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-stone-300 mb-2">Message</label>
@@ -101,16 +151,24 @@ const InterestFormModal: React.FC<InterestFormModalProps> = ({ isOpen, onClose }
                   rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  required
-                  className="w-full bg-brand-dark border border-stone-600 rounded-lg px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-rose transition-all"
+                  disabled={isSubmitting}
+                  className={`w-full bg-brand-dark border rounded-lg px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:ring-2 transition-all ${
+                    errors.message ? 'border-red-500 focus:ring-red-500' : 'border-stone-600 focus:ring-brand-rose'
+                  }`}
                   placeholder="Tell us about your desired experience..."
+                  aria-invalid={errors.message ? 'true' : 'false'}
+                  aria-describedby={errors.message ? 'message-error' : undefined}
                 ></textarea>
+                {errors.message && (
+                  <p id="message-error" className="mt-1 text-sm text-red-400">{errors.message}</p>
+                )}
               </div>
-              <button 
+              <button
                 type="submit"
-                className="w-full mt-auto px-8 py-3 bg-brand-gradient text-brand-dark font-bold rounded-full shadow-lg shadow-pink-500/10 hover:shadow-glow hover:bg-brand-gradient-hover transition-all duration-300 transform hover:scale-105"
+                disabled={isSubmitting}
+                className="w-full mt-auto px-8 py-3 bg-brand-gradient text-brand-dark font-bold rounded-full shadow-lg shadow-pink-500/10 hover:shadow-glow hover:bg-brand-gradient-hover transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Submit Inquiry
+                {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
               </button>
             </form>
           </>
